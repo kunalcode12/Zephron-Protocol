@@ -268,7 +268,6 @@ Contributions are welcome! Please:
 
 
 ## Security
-- Do not use in production without a formal audit
 - Report vulnerabilities privately via issues marked as security or contact maintainers
 - Protocol depends on oracle integrity (Pyth) and proper risk parameters
 
