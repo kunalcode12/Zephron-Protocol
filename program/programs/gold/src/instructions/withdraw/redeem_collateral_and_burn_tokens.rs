@@ -43,31 +43,32 @@ pub fn process_redeem_collateral_and_burn_tokens(
     amount_collateral: u64,
     amount_to_burn: u64,
 ) -> Result<()> {
+    let accounts = &ctx.accounts;
     let collateral_account = &mut ctx.accounts.collateral_account;
-    collateral_account.lamport_balance = ctx.accounts.sol_account.lamports() - amount_collateral;
+    collateral_account.lamport_balance = accounts.sol_account.lamports() - amount_collateral;
     collateral_account.amount_minted -= amount_to_burn;
 
     check_health_factor(
-        &ctx.accounts.collateral_account,
-        &ctx.accounts.config_account,
-        &ctx.accounts.gold_price_update,
-        &ctx.accounts.sol_price_update,
+        &accounts.collateral_account,
+        &accounts.config_account,
+        &accounts.gold_price_update,
+        &accounts.sol_price_update,
     )?;
 
     burn_tokens_internal(
-        &ctx.accounts.mint_account,
-        &ctx.accounts.token_account,
-        &ctx.accounts.depositor,
-        &ctx.accounts.token_program,
+        &accounts.mint_account,
+        &accounts.token_account,
+        &accounts.depositor,
+        &accounts.token_program,
         amount_to_burn,
     )?;
 
     withdraw_sol_internal(
-        &ctx.accounts.sol_account,
-        &ctx.accounts.depositor.to_account_info(),
-        &ctx.accounts.system_program,
-        &ctx.accounts.depositor.key(),
-        ctx.accounts.collateral_account.bump_sol_account,
+        &accounts.sol_account,
+        &accounts.depositor.to_account_info(),
+        &accounts.system_program,
+        &accounts.depositor.key(),
+        accounts.collateral_account.bump_sol_account,
         amount_collateral,
     )?;
 
