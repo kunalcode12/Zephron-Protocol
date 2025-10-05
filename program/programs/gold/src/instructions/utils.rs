@@ -19,7 +19,7 @@ pub fn check_health_factor(
     Ok(())
 }
 
-// Calcuate health factor for a given Collateral account
+// Calculate health factor for a given Collateral account
 pub fn calculate_health_factor(
     collateral: &Account<Collateral>,
     config: &Account<Config>,
@@ -141,7 +141,6 @@ fn get_gold_value_from_usd(usd_amount: &u64, gold_price_feed: &Account<PriceUpda
 
     require!(sol_price.price > 0, CustomError::InvalidPrice);
     let sol_price_f64 = (sol_price.price as f64) * (10.0_f64.powi(sol_price.exponent as i32));
-    let usd_amount_f64 = *usd_amount as f64 / 1e9;
     let usd_in_sol = usd_amount_f64 / sol_price_f64;
     
     // Convert GOLD value to SOL equivalent for logging
@@ -174,7 +173,7 @@ pub fn get_lamports_from_gold(
 
     require!(gold_price.price > 0, CustomError::InvalidPrice);
 
-    let actual_gold_price = (gold_price.price as f64) * (10.0_f64.powi(gold_price.exponent as i32));
+    let _actual_gold_price = (gold_price.price as f64) * (10.0_f64.powi(gold_price.exponent as i32));
     let gold_price_in_usd = (gold_price.price as i128 * PRICE_FEED_DECIMAL_ADJUSTMENT as i128) as u128;
 
     // Convert GOLD to USD
@@ -190,7 +189,7 @@ pub fn get_lamports_from_gold(
 
     require!(sol_price.price > 0, CustomError::InvalidPrice);
 
-    let actual_sol_price = (sol_price.price as f64) * (10.0_f64.powi(sol_price.exponent as i32));
+    let _actual_sol_price = (sol_price.price as f64) * (10.0_f64.powi(sol_price.exponent as i32));
     let sol_price_in_usd = (sol_price.price as i128 * PRICE_FEED_DECIMAL_ADJUSTMENT as i128) as u128;
 
     // Convert USD to SOL lamports
