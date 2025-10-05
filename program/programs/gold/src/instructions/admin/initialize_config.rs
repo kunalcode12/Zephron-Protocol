@@ -42,7 +42,7 @@ pub fn process_initialize_config(ctx: Context<InitializeConfig>) -> Result<()> {
         bump: ctx.bumps.config_account,
         bump_mint_account:  ctx.bumps.mint_account,
     };
-    msg!("Initialized Config Acccount:{:#?}", ctx.accounts.config_account);
+    msg!("Initialized Config Account:{:#?}", ctx.accounts.config_account);
     Ok(())
 }
 

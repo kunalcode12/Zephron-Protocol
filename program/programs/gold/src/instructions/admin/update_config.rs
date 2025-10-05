@@ -16,6 +16,6 @@ pub fn process_update_config(ctx: Context<UpdateConfig>, min_health_factor: u64)
     let config_account = &mut ctx.accounts.config_account;
     config_account.min_health_factor = min_health_factor;
 
-    msg!("Update Config Acccount:{:#?}", ctx.accounts.config_account);
+    msg!("Update Config Account:{:#?}", ctx.accounts.config_account);
     Ok(())
 }
