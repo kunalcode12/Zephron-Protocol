@@ -68,7 +68,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
     let collateral_bank = &mut ctx.accounts.collateral_bank;
     let user = &mut ctx.accounts.user_account;
 
-    let price_update = &mut ctx.accounts.price_update;
+    let price_update = &ctx.accounts.price_update;
 
     let sol_feed_id = get_feed_id_from_hex(SOL_USD_FEED_ID)
         .map_err(|_| error!(ErrorCode::OracleError))?; 
