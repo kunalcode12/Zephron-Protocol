@@ -31,8 +31,18 @@ describe("gold", () => {
     .getPriceFeedAccountAddress(0, SOL_PRICE_FEED_ID)
     .toBase58();
 
-  console.log("GOLD/USD PriceUpdateV2 account:", goldUsdPriceFeedAccount, "https://explorer.solana.com/address/" + goldUsdPriceFeedAccount + "?cluster=devnet");
-  console.log("SOL/USD PriceUpdateV2 account:", solUsdPriceFeedAccount, "https://explorer.solana.com/address/" + solUsdPriceFeedAccount + "?cluster=devnet");
+  const explorerBase = "https://explorer.solana.com";
+  const explorerCluster = "devnet";
+  console.log(
+    "GOLD/USD PriceUpdateV2 account:",
+    goldUsdPriceFeedAccount,
+    `${explorerBase}/address/${goldUsdPriceFeedAccount}?cluster=${explorerCluster}`
+  );
+  console.log(
+    "SOL/USD PriceUpdateV2 account:",
+    solUsdPriceFeedAccount,
+    `${explorerBase}/address/${solUsdPriceFeedAccount}?cluster=${explorerCluster}`
+  );
 
   const [configAccount] = anchor.web3.PublicKey.findProgramAddressSync(
     [seed("config")],
@@ -102,7 +112,11 @@ describe("gold", () => {
       })
       .signers([])
       .rpc();
-    console.log("Your transaction signature", tx, "https://explorer.solana.com/tx/" + tx + "?cluster=devnet");
+    console.log(
+      "Your transaction signature",
+      tx,
+      `${explorerBase}/tx/${tx}?cluster=${explorerCluster}`
+    );
   });
 
   it("Redeem Collateral and Burn GOLD", async () => {
@@ -124,7 +138,11 @@ describe("gold", () => {
       })
       .signers([])
       .rpc();
-    console.log("Your transaction signature", tx, "https://explorer.solana.com/tx/" + tx + "?cluster=devnet");
+    console.log(
+      "Your transaction signature",
+      tx,
+      `${explorerBase}/tx/${tx}?cluster=${explorerCluster}`
+    );
   });
 
   // Increase minimum health threshold to test liquidate
@@ -134,7 +152,11 @@ describe("gold", () => {
       .updateConfig(new BN(1_000_000_000))
       .accounts({ configAccount })
       .rpc();
-    console.log("Your transaction signature", tx, "https://explorer.solana.com/tx/" + tx + "?cluster=devnet");
+    console.log(
+      "Your transaction signature",
+      tx,
+      `${explorerBase}/tx/${tx}?cluster=${explorerCluster}`
+    );
   });
 
   it("Liquidate", async () => {
@@ -155,7 +177,11 @@ describe("gold", () => {
       })
       .signers([])
       .rpc();
-    console.log("Your transaction signature", tx, "https://explorer.solana.com/tx/" + tx + "?cluster=devnet");
+    console.log(
+      "Your transaction signature",
+      tx,
+      `${explorerBase}/tx/${tx}?cluster=${explorerCluster}`
+    );
   });
 
   it("Update Config", async () => {
