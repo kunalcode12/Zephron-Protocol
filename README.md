@@ -1,14 +1,13 @@
 # **Zephron Protocol**
 
-> *Zephron Protocol is a unified ecosystem that transforms physical gold into a liquid on-chain asset, enabling users to instantly borrow against their holdings.*
+> _Zephron Protocol is a unified ecosystem that transforms physical gold into a liquid on-chain asset, enabling users to instantly borrow against their holdings._
 
 **MVP Demo Video:** [https://drive.google.com/file/d/1-kgw9fPsz_Z3dJifnMFgQtC7-HQZnNvD/view](https://drive.google.com/file/d/1-kgw9fPsz_Z3dJifnMFgQtC7-HQZnNvD/view)
 
 ![](Frontend/asset/final.png)
 
-
-
 ## Table of Contents
+
 - [The Problem](#the-problem)
 - [Our Solution](#our-solution-a-unified-ecosystem-and-protocol-for-programmable-gold)
 - [Product Deep Dive 1: Programmable Gold Protocol](#product-deep-dive-1-with-mvp-the-programmable-gold-on-chain-protocol)
@@ -17,6 +16,9 @@
 - [Product Deep Dive 2: Digital Portfolio Platform](#product-deep-dive-2-the-digital-portfolio-platform)
   - [Core Mechanics & User Flows](#core-mechanics--user-flows-1)
   - [Mathematical Formulas](#mathematical-formulas-1)
+- [Product Deep Dive 3: Lending Protocol](#product-deep-dive-3-the-lending-protocol)
+  - [Core Mechanics & User Flows](#core-mechanics--user-flows-2)
+  - [Mathematical Formulas](#mathematical-formulas-2)
 - [Devnet Deployments](#devnet-deployments)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
@@ -31,7 +33,6 @@
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
-
 # **The Problem**
 
 For millions of households, physical gold remains the primary store of wealth yet it is illiquid and unproductive. There is no instant financial infrastructure or liquidity base layer to unlock this static capital, connect USD and non-USD markets, or support the use of local stablecoins in everyday commerce. Existing tokenized gold products like XAUt only offer limited trading pairs and opaque custody, failing to provide true liquidity or seamless integration. The result is a borderless economy that remains out of reach, with trillions in real-world value trapped in slow, costly financial channels.
@@ -40,10 +41,9 @@ The current market is bifurcated, forcing households into a difficult trade-off.
 
 **The Physical Market:** Owning physical gold provides true ownership but is plagued by **high custodial costs, poor liquidity, slow T+2 settlement times, and a lack of utility.**
 
-
 # **Our Solution: A Unified Ecosystem and Protocol for Programmable Gold**
 
-*The figure presents the final product with the integration of programmable gold.*
+_The figure presents the final product with the integration of programmable gold._
 
 We are building a vertically integrated, two-pronged solution that solves the core problems of trust, liquidity, and utility.
 
@@ -105,7 +105,7 @@ It allows users to lock SOL as an Asset as collateral to mint a synthetic, GOLD-
 
 - **Liquidation Condition:** A position is deemed unsafe and open to liquidation when:
 
-```HF < HFmin```
+`HF < HFmin`
 
 - **Maximum Mintable GOLD:** The maximum amount of GOLD a user can mint against their collateral L without being instantly liquidatable.
 
@@ -174,8 +174,104 @@ This platform serves as the intuitive, regulated front-end to our ecosystem. It 
 
 ![](Frontend/asset/last.png)
 
+## **Product Deep Dive 3: The Lending Protocol**
+
+This is a decentralized lending and borrowing protocol built on Solana that enables users to deposit GOLD as collateral and borrow SOL/USDC against them. It implements a shares-based accounting system for fair distribution of interest and provides automated liquidation mechanisms to protect protocol solvency. The protocol uses Pyth oracles for real-time price feeds.
+
+![](Frontend/asset/lending-system-design.svg)
+
+**Program Id:** `33s5M4sRp6LBV8mwHJz1EssyhQ3EHrHnDqQ94N1vy74q`
+
+### **Core Mechanics & User Flows**
+
+1. **Initialize Bank & User:** The protocol administrator initializes a Bank for each supported asset (SOL, USDC) with parameters like liquidation threshold and max LTV. Users create their User account to track their positions across all assets.
+
+2. **Deposit Collateral:** Users deposit tokens into the protocol's bank vault. Deposits are tracked using a shares-based system, where users receive deposit shares proportional to their contribution.
+
+3. **Borrow Assets:** Users can borrow assets up to their maximum borrowing capacity, determined by their total collateral value and the bank's max LTV parameter. Borrowed positions are also tracked using shares to handle interest accrual fairly across all borrowers.
+
+4. **Repay Borrowed Assets:** Users repay their borrowed amounts plus accrued interest. Repayments reduce their borrow shares and improve their health factor, unlocking more collateral(GOLD).
+
+5. **Withdraw Collateral:** Users can withdraw deposited collateral(GOLD) as long as their position remains sufficiently collateralized above the liquidation threshold.
+
+6. **Liquidation:** When a user's health factor falls below 1.0 (indicating under-collateralization), liquidators can step in to repay a portion of the user's debt in exchange for their collateral plus a liquidation bonus. This protects the protocol from bad debt.
+
+**Key Variables:**
+
+- Dsol: Amount of SOL deposited by user (in lamports).
+- Dusdc: Amount of USDC deposited by user.
+- Bsol: Amount of SOL borrowed by user.
+- Busdc: Amount of USDC borrowed by user.
+- Psol_usd: Price of SOL in USD from Pyth oracle.
+- Pusdc_usd: Price of USDC in USD from Pyth oracle.
+- LT: Liquidation Threshold (e.g., 0.8 or 80%).
+- maxLTV: Maximum Loan-to-Value ratio (e.g., 0.75 or 75%).
+- LB: Liquidation Bonus percentage (e.g., 0.05 or 5%).
+- LCF: Liquidation Close Factor (e.g., 0.5 or 50%).
+- HF: Health Factor, ratio of collateral value to borrowed value.
+- TD: Total Deposits in a bank.
+- TDS: Total Deposit Shares in a bank.
+- TB: Total Borrowed from a bank.
+- TBS: Total Borrow Shares in a bank.
+
+### **1. Shares-Based Accounting**
+
+The protocol uses a shares system to fairly distribute interest and fees among depositors and borrowers.
+
+- **Deposit Shares Calculation:** When a user deposits amount `A` into a bank:
+
+![](Frontend/asset/lending-deposit-shares.svg)
+
+- **Borrow Shares Calculation:** When a user borrows amount `B`:
+
+![](Frontend/asset/lending-borrow-shares.svg)
+
+### **2. Collateral and Borrowing Calculations**
+
+- **Total Collateral Value in USD:**
+
+![](Frontend/asset/lending-total-collateral.svg)
+
+- **Total Borrowed Value in USD:**
+
+![](Frontend/asset/lending-total-borrowed.svg)
+
+- **Maximum Borrowable Amount:** The maximum amount a user can borrow based on their collateral:
+
+![](Frontend/asset/lending-max-borrowable.svg)
+
+- **Borrowing Condition:** A user can borrow amount `B` only if:
+
+![](Frontend/asset/lending-borrow-condition.svg)
+
+### **3. Health Factor and Liquidation**
+
+- **Health Factor (HF) Calculation:** The critical metric determining position safety:
+
+![](Frontend/asset/lending-health-factor.svg)
+
+- **Liquidation Condition:** A position becomes liquidatable when:
+
+![](Frontend/asset/lending-liquidation-condition.svg)
+
+- **Liquidation Amount:** When liquidating, the liquidator repays:
+
+![](Frontend/asset/lending-liquidation-amount.svg)
+
+- **Liquidation Payout:** The liquidator receives collateral worth:
+
+![](Frontend/asset/lending-liquidation-payout.svg)
+
+This incentivizes third-party liquidators to monitor and liquidate unhealthy positions, protecting the protocol from insolvency.
+
+### **4. Interest Accrual (Simplified Implementation)**
+
+The protocol includes basic interest accrual for deposits using exponential compounding:
+
+![](Frontend/asset/lending-interest-accrual.svg)
 
 ## Devnet Deployments
+
 - **Program ID**: `EGtHEv1xJP3aA3fT5JVB7H2UXoR6s7rB6iYjkifDqdvQ`
 - **Key Transactions**:
   - Initialize: `https://explorer.solana.com/tx/5nQmjPPLXavsWMMmTauj6Lo23QkC9pRG1WUK8HpAdBWdyJQnUQHtm4w1VCKwY2vUhXwQWLtMF5wyqasFT4EKBXQ5?cluster=devnet`
@@ -187,8 +283,8 @@ This platform serves as the intuitive, regulated front-end to our ecosystem. It 
   - GOLD/USD PriceUpdateV2: `https://explorer.solana.com/address/2uPQGpm8X4ZkxMHxrAW1QuhXcse1AHEgPih6Xp9NuEWW?cluster=devnet`
   - SOL/USD PriceUpdateV2: `https://explorer.solana.com/address/7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE?cluster=devnet`
 
-
 ## Repository Structure
+
 ```
 /Frontend
   apps/
@@ -201,11 +297,16 @@ This platform serves as the intuitive, regulated front-end to our ecosystem. It 
   programs/gold/       # Anchor program for GOLD protocol
   tests/               # Anchor mocha tests
   target/idl/          # IDL output
+/lending
+  programs/lending/    # Anchor program for lending protocol
+  tests/               # Test suite (bankrun & onchain)
+  target/idl/          # IDL output
 ```
 
-
 ## Getting Started
+
 ### Prerequisites
+
 - Node.js 18+
 - npm or pnpm
 - Rust toolchain (stable)
@@ -213,6 +314,7 @@ This platform serves as the intuitive, regulated front-end to our ecosystem. It 
 - Anchor CLI (`anchor --version`)
 
 ### Clone & Install
+
 ```bash
 # Clone
 git clone https://github.com/zephron-labs/zephron-protocol.git
@@ -230,6 +332,7 @@ solana airdrop 2 # on devnet
 ```
 
 ### Run the Frontend
+
 ```bash
 cd Frontend/apps/buyer
 npm run dev
@@ -237,46 +340,63 @@ npm run dev
 ```
 
 ### Build & Test the Program
+
 ```bash
+# For the GOLD protocol
 cd program
+npm install
+anchor build
+npm test
+
+# For the Lending protocol
+cd lending
 npm install
 anchor build
 npm test
 ```
 
 ### Deploy to Devnet
+
 ```bash
+# For the GOLD protocol
 cd program
 anchor deploy
 # Verify IDL at target/idl/gold.json
+
+# For the Lending protocol
+cd lending
+anchor deploy
+# Verify IDL at target/idl/lending_protocol.json
 ```
 
-
 ## Roadmap
+
 - Expand collateral types beyond SOL
 - Oracle redundancy and failover
 - Governance and parameter management
 - Integrate automated keepers for liquidations
 - Mobile-first portfolio app
 
-
 ## Contributing
+
 Contributions are welcome! Please:
+
 - Open an issue to discuss substantial changes
 - Submit focused PRs with clear descriptions
 - Follow existing code style and linting
 
-
 ## Security
+
+- Do not use in production without a formal audit
 - Report vulnerabilities privately via issues marked as security or contact maintainers
 - Protocol depends on oracle integrity (Pyth) and proper risk parameters
 
-
 ## License
+
 MIT — see [LICENSE](./LICENSE).
 
-
 ## Acknowledgements
+
 - Pyth Network for reliable on-chain price feeds
 - Solana and Anchor contributors
 - The broader open-source community
