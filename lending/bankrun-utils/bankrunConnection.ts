@@ -70,10 +70,8 @@ import {
     ): Promise<TransactionSignature> {
       tx.recentBlockhash = (await this.getLatestBlockhash()).toString();
       tx.feePayer = this.context.payer.publicKey;
-      if (!additionalSigners) {
-        additionalSigners = [];
-      }
-      tx.sign(this.context.payer, ...additionalSigners);
+      const signers = additionalSigners ?? [];
+      tx.sign(this.context.payer, ...signers);
       return await this.connection.sendTransaction(tx);
     }
   
@@ -171,13 +169,9 @@ import {
       publicKeys: PublicKey[],
       _commitmentOrConfig?: Commitment
     ): Promise<AccountInfo<Buffer>[]> {
-      const accountInfos = [];
-  
-      for (const publicKey of publicKeys) {
-        const accountInfo = await this.getAccountInfo(publicKey);
-        accountInfos.push(accountInfo);
-      }
-  
+      const accountInfos = await Promise.all(
+        publicKeys.map((publicKey) => this.getAccountInfo(publicKey))
+      );
       return accountInfos;
     }
   
