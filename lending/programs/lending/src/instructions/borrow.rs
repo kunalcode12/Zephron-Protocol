@@ -49,7 +49,7 @@ pub fn process_borrow(ctx: Context<Borrow>, amount: u64) -> Result<()> {
     let bank = &mut ctx.accounts.bank;
     let user = &mut ctx.accounts.user_account;
 
-    let price_update = &mut ctx.accounts.price_update;
+    let price_update = &ctx.accounts.price_update;
 
     let total_collateral: u64;
 
@@ -74,7 +74,7 @@ pub fn process_borrow(ctx: Context<Borrow>, amount: u64) -> Result<()> {
         }
     }
 
-    let borrowable_amount = total_collateral as u64 *  bank.liquidation_threshold;
+    let borrowable_amount = total_collateral * bank.liquidation_threshold;
 
     if borrowable_amount < amount {
         return Err(ErrorCode::OverBorrowableAmount.into());
