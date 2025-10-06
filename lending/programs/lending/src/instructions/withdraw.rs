@@ -62,7 +62,6 @@ pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         authority: ctx.accounts.bank_token_account.to_account_info(),
     };
 
-    let cpi_program = ctx.accounts.token_program.to_account_info();
     let mint_key = ctx.accounts.mint.key();
     let signer_seeds: &[&[&[u8]]] = &[
         &[
@@ -71,7 +70,7 @@ pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
             &[ctx.bumps.bank_token_account],
         ],
     ];
-    let cpi_ctx = CpiContext::new(cpi_program, transfer_cpi_accounts).with_signer(signer_seeds);
+    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_cpi_accounts).with_signer(signer_seeds);
 
     let decimals = ctx.accounts.mint.decimals;
 
@@ -80,8 +79,6 @@ pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     let bank = &mut ctx.accounts.bank;
     let shares_to_remove = (amount as f64 / bank.total_deposits as f64) * bank.total_deposit_shares as f64;
 
-    let user = &mut ctx.accounts.user_account;
-    
     if ctx.accounts.mint.to_account_info().key() == user.usdc_address {
         user.deposited_usdc -= shares_to_remove as u64;
     } else {
