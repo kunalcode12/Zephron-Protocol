@@ -66,8 +66,7 @@ pub fn process_repay(ctx: Context<Repay>, amount: u64) -> Result<()> {
         authority: ctx.accounts.signer.to_account_info(),
     };
 
-    let cpi_program = ctx.accounts.token_program.to_account_info();
-    let cpi_ctx = CpiContext::new(cpi_program, transfer_cpi_accounts);
+    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_cpi_accounts);
     let decimals = ctx.accounts.mint.decimals;
 
     token_interface::transfer_checked(cpi_ctx, amount, decimals)?;

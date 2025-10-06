@@ -65,7 +65,7 @@ pub struct Liquidate<'info> {
 }
 
 pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> { 
-    let collateral_bank = &mut ctx.accounts.collateral_bank;
+    let collateral_bank = &ctx.accounts.collateral_bank;
     let user = &mut ctx.accounts.user_account;
 
     let price_update = &ctx.accounts.price_update;
@@ -102,8 +102,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
         authority: ctx.accounts.liquidator.to_account_info(),
     };
 
-    let cpi_program = ctx.accounts.token_program.to_account_info();
-    let cpi_ctx_to_bank = CpiContext::new(cpi_program.clone(), transfer_to_bank);
+    let cpi_ctx_to_bank = CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_to_bank);
     let decimals = ctx.accounts.borrowed_mint.decimals;
 
     token_interface::transfer_checked(cpi_ctx_to_bank, liquidation_amount, decimals)?;
@@ -125,7 +124,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
             &[ctx.bumps.collateral_bank_token_account],
         ],
     ];
-    let cpi_ctx_to_liquidator = CpiContext::new(cpi_program.clone(), transfer_to_liquidator).with_signer(signer_seeds);
+    let cpi_ctx_to_liquidator = CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_to_liquidator).with_signer(signer_seeds);
     let collateral_decimals = ctx.accounts.collateral_mint.decimals;   
     token_interface::transfer_checked(cpi_ctx_to_liquidator, liquidation_bonus, collateral_decimals)?;
 
