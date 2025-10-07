@@ -22,12 +22,14 @@ pub struct Borrow<'info> {
     #[account(
         mut, 
         seeds = [b"treasury", mint.key().as_ref()],
+        seeds::program = token_program,
         bump, 
     )]  
     pub bank_token_account: InterfaceAccount<'info, TokenAccount>,
     #[account(
         mut, 
         seeds = [signer.key().as_ref()],
+        user::bump = user
         bump,
     )]  
     pub user_account: Account<'info, User>,
@@ -37,6 +39,7 @@ pub struct Borrow<'info> {
         associated_token::mint = mint, 
         associated_token::authority = signer,
         associated_token::token_program = token_program,
+        associated_token::program = associated_token_program,
     )]
     pub user_token_account: InterfaceAccount<'info, TokenAccount>, 
     pub price_update: Account<'info, PriceUpdateV2>,
