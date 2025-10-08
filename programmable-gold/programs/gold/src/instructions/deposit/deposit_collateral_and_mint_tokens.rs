@@ -72,7 +72,7 @@ pub fn process_deposit_collateral_and_mint_tokens(
     }
 
     check_health_factor(
-        &accounts.collateral_account,
+        collateral_account,
         &accounts.config_account,
         &accounts.gold_price_update,
         &accounts.sol_price_update,

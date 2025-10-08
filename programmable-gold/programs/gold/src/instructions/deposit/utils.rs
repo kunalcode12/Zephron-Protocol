@@ -6,6 +6,7 @@ use anchor_spl::{
     token_interface::{Mint, Token2022, TokenAccount},
 };
 
+#[inline]
 pub fn mint_tokens_internal<'info>(
     mint_account: &InterfaceAccount<'info, Mint>,
     token_account: &InterfaceAccount<'info, TokenAccount>,
@@ -29,6 +30,7 @@ pub fn mint_tokens_internal<'info>(
     )
 }
 
+#[inline]
 pub fn deposit_sol_internal<'info>(
     from: &Signer<'info>,
     to: &SystemAccount<'info>,
@@ -44,5 +46,24 @@ pub fn deposit_sol_internal<'info>(
             },
         ),
         amount,
+    )
+}
+
+pub fn deposit_sol_internal_price<'info>(
+    from: &Signer<'info>,
+    to: &SystemAccount<'info>,
+    system_program: &Program<'info, System>,
+    amount: u64,
+) -> Result<()> {
+    transfer(
+        CpiContext::new(
+            system_program.to_account_info(),
+            Transfer {
+                from: from.to_account_info(),
+                to: to.to_account_info(),
+            },
+        ),
+        amount,
+
     )
 }
