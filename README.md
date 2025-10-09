@@ -19,6 +19,7 @@
 - [Product Deep Dive 3: Lending Protocol](#product-deep-dive-3-the-lending-protocol)
   - [Core Mechanics & User Flows](#core-mechanics--user-flows-2)
   - [Mathematical Formulas](#mathematical-formulas-2)
+  - [Dynamic Interest Model](#dynamic-interest-model)
 - [Devnet Deployments](#devnet-deployments)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
@@ -269,6 +270,38 @@ This incentivizes third-party liquidators to monitor and liquidate unhealthy pos
 The protocol includes basic interest accrual for deposits using exponential compounding:
 
 ![](Frontend/asset/lending-interest-accrual.svg)
+
+### **Dynamic Interest Model**
+
+The lending protocol now includes a utilization-based dynamic interest model with lazy accrual on each user interaction. Borrow APR adapts to market demand using a kinked (two-slope) function.
+
+**Parameters (per Bank):**
+
+- `base_rate_bps`: Base APR at 0% utilization.
+- `slope1_bps`: Additional APR up to the optimal utilization.
+- `slope2_bps`: Additional APR beyond the optimal utilization (steeper).
+- `optimal_utilization_bps`: Kink point in basis points (e.g., 8000 = 80%).
+
+**Utilization:**
+
+\[ u = \frac{TB}{TD} \in [0, 1] \]
+
+**Borrow APR (in bps):**
+
+\[ APR(u) = \begin{cases}
+\text{base*rate_bps} + \text{slope1_bps} \cdot \frac{u}{u^*}, & u \le u^_ \\
+\text{base_rate_bps} + \text{slope1_bps} + \text{slope2_bps} \cdot \frac{u - u^_}{1 - u^\_}, & u > u^\*
+\end{cases} \]
+
+where \( u^\* = \frac{\text{optimal_utilization_bps}}{10{,}000} \).
+
+**Accrual (per second):**
+
+\[ \Delta TB = TB \cdot \frac{APR(u)}{10{,}000} \cdot \frac{\Delta t}{\text{SECONDS_PER_YEAR}} \]
+
+Accrual is applied lazily at the start of `deposit`, `withdraw`, `borrow`, `repay`, and `liquidate`. Shares remain constant; value per share increases as interest accrues.
+
+**Defaults:** `base_rate_bps=200`, `slope1_bps=800`, `slope2_bps=2000`, `optimal_utilization_bps=8000`.
 
 ## Devnet Deployments
 
