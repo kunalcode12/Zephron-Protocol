@@ -286,7 +286,7 @@ The lending protocol now includes a utilization-based dynamic interest model wit
 
 \[ u = \frac{TB}{TD} \in [0, 1] \]
 
-**Borrow APR (in bps):**
+<!-- **Borrow APR (in bps):**
 
 \[ APR(u) = \begin{cases}
 \text{base*rate_bps} + \text{slope1_bps} \cdot \frac{u}{u^*}, & u \le u^_ \\
@@ -297,7 +297,9 @@ where \( u^\* = \frac{\text{optimal_utilization_bps}}{10{,}000} \).
 
 **Accrual (per second):**
 
-\[ \Delta TB = TB \cdot \frac{APR(u)}{10{,}000} \cdot \frac{\Delta t}{\text{SECONDS_PER_YEAR}} \]
+\[ \Delta TB = TB \cdot \frac{APR(u)}{10{,}000} \cdot \frac{\Delta t}{\text{SECONDS_PER_YEAR}} \] -->
+
+![](Frontend/asset/interest1.png)
 
 Accrual is applied lazily at the start of `deposit`, `withdraw`, `borrow`, `repay`, and `liquidate`. Shares remain constant; value per share increases as interest accrues.
 
