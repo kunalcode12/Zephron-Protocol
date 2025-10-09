@@ -5,6 +5,7 @@ use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2
 use crate::constants::{MAXIMUM_AGE, SOL_USD_FEED_ID, USDC_USD_FEED_ID};
 use crate::state::*;
 use crate::error::ErrorCode;
+use super::interest::accrue_interest;
 
 #[derive(Accounts)]
 pub struct Liquidate<'info> {
@@ -65,6 +66,7 @@ pub struct Liquidate<'info> {
 }
 
 pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> { 
+    accrue_interest(&mut ctx.accounts.collateral_bank)?;
     let collateral_bank = &ctx.accounts.collateral_bank;
     let user = &mut ctx.accounts.user_account;
 

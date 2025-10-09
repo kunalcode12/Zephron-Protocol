@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{ self, Mint, TokenAccount, TokenInterface, TransferChecked };
 use crate::state::*;
+use super::interest::accrue_interest;
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -39,6 +40,8 @@ pub struct Deposit<'info> {
 }
 
 pub fn process_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+    // Accrue interest before state mutations
+    accrue_interest(&mut ctx.accounts.bank)?;
     let transfer_cpi_accounts = TransferChecked {
         from: ctx.accounts.user_token_account.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),

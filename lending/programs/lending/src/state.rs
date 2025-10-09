@@ -15,6 +15,12 @@ pub struct Bank {
     pub max_ltv: u64,
     pub last_updated: i64,
     pub interest_rate: u64,
+    // Interest parameters (basis points) and accrual
+    pub base_rate_bps: u64,
+    pub slope1_bps: u64,
+    pub slope2_bps: u64,
+    pub optimal_utilization_bps: u64,
+    pub last_accrual_ts: i64,
 }
 
 #[account]

@@ -3,6 +3,7 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{ self, Mint, TokenAccount, TokenInterface, TransferChecked };
 use crate::state::*;
 use crate::error::ErrorCode;
+use super::interest::accrue_interest;
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
@@ -41,6 +42,7 @@ pub struct Withdraw<'info> {
 }
 
 pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+    accrue_interest(&mut ctx.accounts.bank)?;
     let user = &mut ctx.accounts.user_account;
 
     let deposited_value; 
