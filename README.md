@@ -284,7 +284,7 @@ The lending protocol now includes a utilization-based dynamic interest model wit
 
 **Utilization:**
 
-\[ u = \frac{TB}{TD} \in [0, 1] \]
+<!-- \[ u = \frac{TB}{TD} \in [0, 1] \] -->
 
 <!-- **Borrow APR (in bps):**
 
