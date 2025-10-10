@@ -76,8 +76,8 @@ pub fn process_repay(ctx: Context<Repay>, amount: u64) -> Result<()> {
 
     let bank = &mut ctx.accounts.bank;
 
-    let borrowed_ratio = amount.checked_div(bank.total_borrowed).unwrap();
-    let users_shares = bank.total_borrowed_shares.checked_mul(borrowed_ratio).unwrap();
+    let borrowed_ratio = amount.checked_div(bank.total_borrowed).ok_or(ErrorCode::OverRepay)?;
+    let users_shares = bank.total_borrowed_shares.checked_mul(borrowed_ratio).ok_or(ErrorCode::OverRepay)?;
     
     let user = &mut ctx.accounts.user_account;
     

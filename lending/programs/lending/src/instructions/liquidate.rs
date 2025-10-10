@@ -85,16 +85,24 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
         .map_err(|_| error!(ErrorCode::OracleError))?;
 
 
-    let total_collateral = (sol_price.price as u64 * user.deposited_sol) + (usdc_price.price as u64 * user.deposited_usdc);
-    let total_borrowed = (sol_price.price as u64 * user.borrowed_sol) + (usdc_price.price as u64 * user.borrowed_usdc);    
+    let total_collateral = (sol_price.price as u64)
+        .saturating_mul(user.deposited_sol)
+        .saturating_add((usdc_price.price as u64).saturating_mul(user.deposited_usdc));
+    let total_borrowed = (sol_price.price as u64)
+        .saturating_mul(user.borrowed_sol)
+        .saturating_add((usdc_price.price as u64).saturating_mul(user.borrowed_usdc));    
 
-    let health_factor = (total_collateral * collateral_bank.liquidation_threshold)/total_borrowed;
+    let health_factor = total_collateral
+        .saturating_mul(collateral_bank.liquidation_threshold)
+        .checked_div(total_borrowed)
+        .unwrap_or(0);
 
     if health_factor >= 1 {
         return Err(ErrorCode::NotUndercollateralized.into());
     }
 
-    let liquidation_amount = total_borrowed * collateral_bank.liquidation_close_factor;
+    let liquidation_amount = total_borrowed
+        .saturating_mul(collateral_bank.liquidation_close_factor);
 
 
     let transfer_to_bank = TransferChecked {
@@ -109,7 +117,9 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
 
     token_interface::transfer_checked(cpi_ctx_to_bank, liquidation_amount, decimals)?;
 
-    let liquidation_bonus = (liquidation_amount * collateral_bank.liquidation_bonus) + liquidation_amount;
+    let liquidation_bonus = liquidation_amount
+        .saturating_mul(collateral_bank.liquidation_bonus)
+        .saturating_add(liquidation_amount);
     
     let transfer_to_liquidator = TransferChecked {
         from: ctx.accounts.collateral_bank_token_account.to_account_info(),

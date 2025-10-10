@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{ self, Mint, TokenAccount, TokenInterface, TransferChecked };
 use crate::state::*;
+use crate::error::ErrorCode;
 use super::interest::accrue_interest;
 
 #[derive(Accounts)]
@@ -61,8 +62,8 @@ pub fn process_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         bank.total_deposit_shares = amount;
     }
     
-    let deposit_ratio = amount.checked_div(bank.total_deposits).unwrap();
-    let users_shares = bank.total_deposit_shares.checked_mul(deposit_ratio).unwrap();
+    let deposit_ratio = amount.checked_div(bank.total_deposits).ok_or(ErrorCode::InsufficientFunds)?;
+    let users_shares = bank.total_deposit_shares.checked_mul(deposit_ratio).ok_or(ErrorCode::InsufficientFunds)?;
     
     let user = &mut ctx.accounts.user_account;
     

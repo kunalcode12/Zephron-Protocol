@@ -1,5 +1,3 @@
-use std::f32::consts::E;
-
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{ self, Mint, TokenAccount, TokenInterface, TransferChecked };
@@ -108,8 +106,8 @@ pub fn process_borrow(ctx: Context<Borrow>, amount: u64) -> Result<()> {
         bank.total_borrowed_shares = amount;
     } 
 
-    let borrow_ratio = amount.checked_div(bank.total_borrowed).unwrap();
-    let users_shares = bank.total_borrowed_shares.checked_mul(borrow_ratio).unwrap();
+    let borrow_ratio = amount.checked_div(bank.total_borrowed).ok_or(ErrorCode::OverBorrowableAmount)?;
+    let users_shares = bank.total_borrowed_shares.checked_mul(borrow_ratio).ok_or(ErrorCode::OverBorrowableAmount)?;
 
     bank.total_borrowed += amount;
     bank.total_borrowed_shares += users_shares; 

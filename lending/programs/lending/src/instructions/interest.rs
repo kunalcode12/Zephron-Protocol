@@ -4,8 +4,12 @@ use crate::constants::{BPS_DENOMINATOR, SECONDS_PER_YEAR};
 
 // Compute utilization = total_borrowed / total_deposits (in bps), guarding zeros
 fn compute_utilization_bps(bank: &Bank) -> u64 {
-    if bank.total_deposits == 0 { return 0; }
-    if bank.total_borrowed >= bank.total_deposits { return BPS_DENOMINATOR; }
+    if bank.total_deposits == 0 { 
+        return 0; 
+    }
+    if bank.total_borrowed >= bank.total_deposits { 
+        return BPS_DENOMINATOR; 
+    }
     ((bank.total_borrowed as u128)
         .saturating_mul(BPS_DENOMINATOR as u128)
         .checked_div(bank.total_deposits as u128)
@@ -15,7 +19,6 @@ fn compute_utilization_bps(bank: &Bank) -> u64 {
 // Kinked utilization model
 fn current_borrow_rate_bps(bank: &Bank) -> u64 {
     let u_bps = compute_utilization_bps(bank);
-    let u_bps = u_bps.min(BPS_DENOMINATOR); // cap at 100%
     if u_bps <= bank.optimal_utilization_bps {
         // base + slope1 * (u / optimal)
         let slope_contrib = (bank.slope1_bps as u128)
@@ -26,10 +29,8 @@ fn current_borrow_rate_bps(bank: &Bank) -> u64 {
         
     } else {
         // base + slope1 + slope2 * ((u - optimal)/(1 - optimal))
-        let u_bps = u_bps.min(BPS_DENOMINATOR); // cap at 100%
         let over_bps = u_bps.saturating_sub(bank.optimal_utilization_bps);
         let denom = BPS_DENOMINATOR.saturating_sub(bank.optimal_utilization_bps).max(1);
-        let denom = denom as u128;
         let slope2_contrib = (bank.slope2_bps as u128)
             .saturating_mul(over_bps as u128)
             .checked_div(denom as u128)
@@ -43,12 +44,22 @@ fn current_borrow_rate_bps(bank: &Bank) -> u64 {
 // Accrue interest on total_borrowed based on elapsed time and current borrow APR.
 pub fn accrue_interest(bank: &mut Bank) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
-    if bank.last_accrual_ts == 0 { bank.last_accrual_ts = now; return Ok(()); }
-    if now <= bank.last_accrual_ts { return Ok(()); }
+    if bank.last_accrual_ts == 0 { 
+        bank.last_accrual_ts = now; 
+        return Ok(()); 
+    }
+    if now <= bank.last_accrual_ts { 
+        return Ok(()); 
+    }
 
     let elapsed: i64 = now - bank.last_accrual_ts;
-    if elapsed <= 0 { return Ok(()); }
-    if bank.total_borrowed == 0 { bank.last_accrual_ts = now; return Ok(()); }
+    if elapsed <= 0 { 
+        return Ok(()); 
+    }
+    if bank.total_borrowed == 0 { 
+        bank.last_accrual_ts = now; 
+        return Ok(()); 
+    }
 
     let apr_bps = current_borrow_rate_bps(bank);
 
