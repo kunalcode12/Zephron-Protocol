@@ -51,45 +51,51 @@ pub struct DepositCollateralAndMintTokens<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// https://github.com/Cyfrin/foundry-defi-stablecoin-cu/blob/main/src/DSCEngine.sol#L140
 pub fn process_deposit_collateral_and_mint_tokens(
     ctx: Context<DepositCollateralAndMintTokens>,
     amount_collateral: u64,
     amount_to_mint: u64,
 ) -> Result<()> {
-    let accounts = &ctx.accounts;
+    let sol_lamports = {
+        let lamports_ref = ctx.accounts.sol_account.to_account_info().lamports.borrow();
+        *lamports_ref
+    };
+    let config_bump_mint = {
+        ctx.accounts.config_account.bump_mint_account
+    };
+
     let collateral_account = &mut ctx.accounts.collateral_account;
-    collateral_account.lamport_balance = accounts.sol_account.lamports() + amount_collateral;
+    collateral_account.lamport_balance = sol_lamports + amount_collateral;
     collateral_account.amount_minted += amount_to_mint;
 
     if !collateral_account.is_initialized {
         collateral_account.is_initialized = true;
-        collateral_account.depositor = accounts.depositor.key();
-        collateral_account.sol_account = accounts.sol_account.key();
-        collateral_account.token_account = accounts.token_account.key();
+        collateral_account.depositor = ctx.accounts.depositor.key();
+        collateral_account.sol_account = ctx.accounts.sol_account.key();
+        collateral_account.token_account = ctx.accounts.token_account.key();
         collateral_account.bump = ctx.bumps.collateral_account;
         collateral_account.bump_sol_account = ctx.bumps.sol_account;
     }
 
     check_health_factor(
         collateral_account,
-        &accounts.config_account,
-        &accounts.gold_price_update,
-        &accounts.sol_price_update,
+        &ctx.accounts.config_account,
+        &ctx.accounts.gold_price_update,
+        &ctx.accounts.sol_price_update,
     )?;
 
     deposit_sol_internal(
-        &accounts.depositor,
-        &accounts.sol_account,
-        &accounts.system_program,
+        &ctx.accounts.depositor,
+        &ctx.accounts.sol_account,
+        &ctx.accounts.system_program,
         amount_collateral,
     )?;
 
     mint_tokens_internal(
-        &accounts.mint_account,
-        &accounts.token_account,
-        &accounts.token_program,
-        accounts.config_account.bump_mint_account,
+        &ctx.accounts.mint_account,
+        &ctx.accounts.token_account,
+        &ctx.accounts.token_program,
+        config_bump_mint,
         amount_to_mint,
     )?;
     Ok(())
