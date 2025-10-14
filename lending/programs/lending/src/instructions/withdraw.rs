@@ -45,9 +45,12 @@ pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     accrue_interest(&mut ctx.accounts.bank)?;
     let user = &mut ctx.accounts.user_account;
 
+    let mint_key = ctx.accounts.mint.key();
+    let user_usdc = user.usdc_address;
+
     let deposited_value; 
 
-    if ctx.accounts.mint.to_account_info().key() == user.usdc_address {
+    if mint_key == user_usdc {
         deposited_value = user.deposited_usdc;
     } else {
         deposited_value = user.deposited_sol;
@@ -64,7 +67,7 @@ pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         authority: ctx.accounts.bank_token_account.to_account_info(),
     };
 
-    let mint_key = ctx.accounts.mint.key();
+    let mint_key = mint_key;
     let signer_seeds: &[&[&[u8]]] = &[
         &[
             b"treasury",
@@ -84,7 +87,7 @@ pub fn process_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         .checked_div(bank.total_deposits as u128)
         .unwrap_or(0) as u64;
 
-    if ctx.accounts.mint.to_account_info().key() == user.usdc_address {
+    if mint_key == user_usdc {
         user.deposited_usdc = user.deposited_usdc.saturating_sub(shares_to_remove);
     } else {
         user.deposited_sol = user.deposited_sol.saturating_sub(shares_to_remove);

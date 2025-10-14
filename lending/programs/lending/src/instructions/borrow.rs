@@ -50,12 +50,14 @@ pub fn process_borrow(ctx: Context<Borrow>, amount: u64) -> Result<()> {
     let user = &mut ctx.accounts.user_account;
 
     let price_update = &ctx.accounts.price_update;
+    let mint_key = ctx.accounts.mint.key();
+    let user_usdc = user.usdc_address;
 
     let total_collateral: u64;
     
 
-    match ctx.accounts.mint.to_account_info().key() {
-        key if key == user.usdc_address => {
+    match mint_key {
+        key if key == user_usdc => {
             let sol_feed_id = get_feed_id_from_hex(SOL_USD_FEED_ID)
                 .map_err(|_| error!(ErrorCode::OracleError))?; 
             let sol_price = price_update
@@ -88,7 +90,6 @@ pub fn process_borrow(ctx: Context<Borrow>, amount: u64) -> Result<()> {
     };
 
     let cpi_program = ctx.accounts.token_program.to_account_info();
-    let mint_key = ctx.accounts.mint.key();
     let signer_seeds: &[&[&[u8]]] = &[
         &[
             b"treasury",

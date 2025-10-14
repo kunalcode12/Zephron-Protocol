@@ -46,10 +46,12 @@ pub fn process_repay(ctx: Context<Repay>, amount: u64) -> Result<()> {
     let user = &mut ctx.accounts.user_account;
 
     let borrowed_asset; 
+    let mint_key = ctx.accounts.mint.key();
+    let user_usdc = user.usdc_address;
 
 
-    match ctx.accounts.mint.to_account_info().key() {
-        key if key == user.usdc_address => {
+    match mint_key {
+        key if key == user_usdc => {
             borrowed_asset = user.borrowed_usdc;
         },
         _ => {
@@ -81,8 +83,8 @@ pub fn process_repay(ctx: Context<Repay>, amount: u64) -> Result<()> {
     
     let user = &mut ctx.accounts.user_account;
     
-    match ctx.accounts.mint.to_account_info().key() {
-        key if key == user.usdc_address => {
+    match mint_key {
+        key if key == user_usdc => {
             user.borrowed_usdc -= amount;
             user.borrowed_usdc_shares -= users_shares;
         },

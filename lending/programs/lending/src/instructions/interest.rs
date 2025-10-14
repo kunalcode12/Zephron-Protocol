@@ -3,6 +3,7 @@ use crate::state::Bank;
 use crate::constants::{BPS_DENOMINATOR, SECONDS_PER_YEAR};
 
 // Compute utilization = total_borrowed / total_deposits (in bps), guarding zeros
+#[inline(always)]
 fn compute_utilization_bps(bank: &Bank) -> u64 {
     if bank.total_deposits == 0 { 
         return 0; 
@@ -17,6 +18,7 @@ fn compute_utilization_bps(bank: &Bank) -> u64 {
 }
 
 // Kinked utilization model
+#[inline(always)]
 fn current_borrow_rate_bps(bank: &Bank) -> u64 {
     let u_bps = compute_utilization_bps(bank);
     if u_bps <= bank.optimal_utilization_bps {
@@ -82,7 +84,9 @@ pub fn accrue_interest(bank: &mut Bank) -> Result<()> {
 }
 
 // Expose helpers for testing/inspection
+#[inline(always)]
 pub fn get_utilization_bps(bank: &Bank) -> u64 { compute_utilization_bps(bank) }
+#[inline(always)]
 pub fn get_borrow_rate_bps(bank: &Bank) -> u64 { current_borrow_rate_bps(bank) }
 
 

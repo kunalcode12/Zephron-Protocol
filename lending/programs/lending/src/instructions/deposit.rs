@@ -56,6 +56,7 @@ pub fn process_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     token_interface::transfer_checked(cpi_ctx, amount, decimals)?;
 
     let bank = &mut ctx.accounts.bank;
+    let mint_key = ctx.accounts.mint.key();
 
     if bank.total_deposits == 0 {
         bank.total_deposits = amount;
@@ -66,9 +67,10 @@ pub fn process_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     let users_shares = bank.total_deposit_shares.checked_mul(deposit_ratio).ok_or(ErrorCode::InsufficientFunds)?;
     
     let user = &mut ctx.accounts.user_account;
+    let user_usdc = user.usdc_address;
     
-    match ctx.accounts.mint.to_account_info().key() {
-        key if key == user.usdc_address => {
+    match mint_key {
+        key if key == user_usdc => {
             user.deposited_usdc += amount;
             user.deposited_usdc_shares += users_shares;
         },
