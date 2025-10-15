@@ -40,8 +40,8 @@ pub struct Liquidate<'info> {
 }
 
 // https://github.com/Cyfrin/foundry-defi-stablecoin-cu/blob/main/src/DSCEngine.sol#L215
-pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result<()> {
-    let accounts = &ctx.accounts;
+pub fn process_liquidate(mut ctx: Context<Liquidate>, amount_to_burn: u64) -> Result<()> {
+    let accounts = &mut ctx.accounts;
     let health_factor = calculate_health_factor(
         &accounts.collateral_account,
         &accounts.config_account,
