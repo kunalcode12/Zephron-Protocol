@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{ self, Mint, TokenAccount, TokenInterface, TransferChecked };
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
-use crate::constants::{MAXIMUM_AGE, SOL_USD_FEED_ID, USDC_USD_FEED_ID};
+use crate::constants::{MAXIMUM_AGE, SOL_USD_FEED_ID, USDC_USD_FEED_ID, BPS_DENOMINATOR};
 use crate::state::*;
 use crate::error::ErrorCode;
 use super::interest::accrue_interest;
@@ -121,6 +121,69 @@ pub fn process_borrow(ctx: Context<Borrow>, amount: u64) -> Result<()> {
         _ => {
             user.borrowed_sol += amount;
             user.deposited_sol_shares += users_shares;
+        }
+    }
+
+    // Update health factor after borrowing
+    update_user_health_factor(user, &price_update)?;
+
+    Ok(())
+}
+
+fn update_user_health_factor(user: &mut User, price_update: &PriceUpdateV2) -> Result<()> {
+    let sol_feed_id = get_feed_id_from_hex(SOL_USD_FEED_ID)
+        .map_err(|_| error!(ErrorCode::OracleError))?;
+    let usdc_feed_id = get_feed_id_from_hex(USDC_USD_FEED_ID)
+        .map_err(|_| error!(ErrorCode::OracleError))?;
+
+    let sol_price = price_update
+        .get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &sol_feed_id)
+        .map_err(|_| error!(ErrorCode::OracleError))?;
+    let usdc_price = price_update
+        .get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &usdc_feed_id)
+        .map_err(|_| error!(ErrorCode::OracleError))?;
+
+    let total_collateral_value = (sol_price.price as u64)
+        .saturating_mul(user.deposited_sol)
+        .saturating_add((usdc_price.price as u64).saturating_mul(user.deposited_usdc));
+    
+    let total_borrowed_value = (sol_price.price as u64)
+        .saturating_mul(user.borrowed_sol)
+        .saturating_add((usdc_price.price as u64).saturating_mul(user.borrowed_usdc));
+
+    let health_factor = if total_borrowed_value == 0 {
+        u64::MAX 
+    } else {
+        (total_collateral_value as u128)
+            .saturating_mul(BPS_DENOMINATOR as u128)
+            .checked_div(total_borrowed_value as u128)
+            .unwrap_or(0) as u64
+    };
+
+    // health factor
+    user.health_factor = health_factor;
+    user.last_health_check = Clock::get()?.unix_timestamp;
+
+   
+    if user.is_monitoring_enabled && health_factor < user.alert_threshold {
+        let now = Clock::get()?.unix_timestamp;
+        let hours_since_last_alert = (now - user.last_alert_sent) / 3600;
+        
+        if hours_since_last_alert >= user.alert_frequency_hours as i64 {
+            user.last_alert_sent = now;
+            
+            emit!(crate::instructions::health_monitor::HealthAlertEvent {
+                user: user.owner,
+                health_factor,
+                total_collateral_value,
+                total_borrowed_value,
+                sol_price: sol_price.price as u64,
+                usdc_price: usdc_price.price as u64,
+                timestamp: now,
+            });
+            
+            msg!("HEALTH ALERT: User {} health factor {} below threshold {}", 
+                 user.owner, health_factor, user.alert_threshold);
         }
     }
 

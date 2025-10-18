@@ -16,4 +16,8 @@ pub enum ErrorCode {
     NotUndercollateralized,
     #[msg("Oracle price error")] 
     OracleError,
+    #[msg("Invalid health factor threshold. Must be between 110-300 bps.")]
+    InvalidThreshold,
+    #[msg("Invalid alert frequency. Must be between 1-168 hours.")]
+    InvalidAlertFrequency,
 }

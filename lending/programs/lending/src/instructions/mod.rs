@@ -10,4 +10,6 @@ pub use repay::*;
 pub mod repay;
 pub use liquidate::*;
 pub mod liquidate;
+pub use health_monitor::*;
+pub mod health_monitor;
 pub mod interest;

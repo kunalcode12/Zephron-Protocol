@@ -40,4 +40,25 @@ pub mod lending_protocol {
     pub fn liquidate(ctx: Context<Liquidate>) -> Result<()> {
         process_liquidate(ctx)
     }
+
+    // Health monitoring
+    pub fn enable_health_monitoring(ctx: Context<EnableHealthMonitoring>) -> Result<()> {
+        process_enable_health_monitoring(ctx)
+    }
+
+    pub fn update_health_threshold(
+        ctx: Context<UpdateHealthThreshold>, 
+        new_threshold: u64,
+        alert_frequency_hours: u8
+    ) -> Result<()> {
+        process_update_health_threshold(ctx, new_threshold, alert_frequency_hours)
+    }
+
+    pub fn check_health_factor(ctx: Context<CheckHealthFactor>) -> Result<()> {
+        process_check_health_factor(ctx)
+    }
+
+    pub fn create_health_snapshot(ctx: Context<CreateHealthSnapshot>) -> Result<()> {
+        process_create_health_snapshot(ctx)
+    }
 }

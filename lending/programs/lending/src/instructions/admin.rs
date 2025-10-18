@@ -49,11 +49,10 @@ pub fn process_init_bank(ctx: Context<InitBank>, liquidation_threshold: u64, max
     bank.authority = ctx.accounts.signer.key();
     bank.liquidation_threshold = liquidation_threshold;
     bank.max_ltv = max_ltv;
-    // Initialize dynamic interest parameters with sane defaults
     bank.base_rate_bps = 200; // 2%
-    bank.slope1_bps = 800; // +8% until optimal utilization
-    bank.slope2_bps = 2_000; // +20% after optimal utilization
-    bank.optimal_utilization_bps = 8_000; // 80%
+    bank.slope1_bps = 800; 
+    bank.slope2_bps = 2_000; 
+    bank.optimal_utilization_bps = 8_000; 
     bank.last_accrual_ts = Clock::get()?.unix_timestamp;
     Ok(())
 }
@@ -65,6 +64,13 @@ pub fn process_init_user(ctx: Context<InitUser>, usdc_address: Pubkey) -> Result
     
     let now = Clock::get()?.unix_timestamp; 
     user.last_updated = now;
+    
+    user.alert_threshold = 150; 
+    user.last_health_check = now;
+    user.health_history_count = 0;
+    user.is_monitoring_enabled = false; 
+    user.last_alert_sent = 0;
+    user.alert_frequency_hours = 24; 
 
     Ok(())
 }
